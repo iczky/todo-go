@@ -1,0 +1,25 @@
+### Base URL
+@baseURL = http://localhost:3000/api/todos
+
+### Get all todos
+GET {{baseURL}}
+
+### Create a new todo
+POST {{baseURL}}
+Content-Type: application/json
+
+{
+  "title": "Learn Go v2"
+}
+
+### Update a specific todo
+PUT {{baseURL}}/{id}
+Content-Type: application/json
+
+{
+  "title": "Mastering Go",
+  "completed": true
+}
+
+### Delete a specific todo
+DELETE {{baseURL}}/{id}
