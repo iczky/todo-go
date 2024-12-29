@@ -1,46 +1,59 @@
 package services
 
-import "errors"
+import (
+	"errors"
+	"github.com/iczky/todo-fiber/internal/models"
+)
 
-type Todo struct {
-	ID        int    `json:"id"`
-	Title     string `json:"title"`
-	Completed bool   `json:"completed"`
+type TodoService interface {
+	GetAllTodos() *[]models.Todo
+	CreateTodo(title string) *models.Todo
+	UpdateTodoByID(id int, title string, completed bool) (*models.Todo, error)
+	DeleteTodoByID(id int) error
 }
 
-var todos []Todo
-var nextID = 1
-
-func GetAllTodos() *[]Todo {
-	return &todos
+type todoServiceImpl struct {
+	todos  []models.Todo
+	nextID int
 }
 
-func CreateTodo(title string) *Todo {
-	newTodo := Todo{
-		ID:        nextID,
+func NewTodoService() TodoService {
+	return &todoServiceImpl{
+		todos:  make([]models.Todo, 0),
+		nextID: 1,
+	}
+}
+
+func (s *todoServiceImpl) GetAllTodos() *[]models.Todo {
+	return &s.todos
+}
+
+func (s *todoServiceImpl) CreateTodo(title string) *models.Todo {
+	newTodo := models.Todo{
+		ID:        s.nextID,
 		Title:     title,
 		Completed: false,
 	}
-	nextID++
-	todos = append(todos, newTodo)
+	s.nextID++
+	s.todos = append(s.todos, newTodo)
 	return &newTodo
 }
 
-func UpdateTodoByID(id int, title string, completed bool) (*Todo, error) {
-	for i, todo := range todos {
+func (s *todoServiceImpl) UpdateTodoByID(id int, title string, completed bool) (*models.Todo, error) {
+	for i, todo := range s.todos {
 		if todo.ID == id {
-			todos[i].Title = title
-			todos[i].Completed = completed
-			return &todos[i], nil
+			s.todos[i].Title = title
+			s.todos[i].Completed = completed
+			return &s.todos[i], nil
 		}
 	}
 	return nil, errors.New("todo not found")
 }
 
-func DeleteTodoByID(id int) error {
-	for i, todo := range todos {
+func (s *todoServiceImpl) DeleteTodoByID(id int) error {
+	for i, todo := range s.todos {
 		if todo.ID == id {
-			todos = append(todos[:i], todos[i+1:]...)
+			s.todos = append(s.todos[:i], s.todos[i+1:]...)
 			return nil
 		}
 	}

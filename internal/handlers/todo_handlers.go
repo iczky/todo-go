@@ -6,28 +6,47 @@ import (
 	"strconv"
 )
 
-func GetTodos(c *fiber.Ctx) error {
-	todos := services.GetAllTodos()
+type TodoHandler struct {
+	Service services.TodoService
+}
+
+// Constructor
+func NewTodoHandler(service services.TodoService) *TodoHandler {
+	return &TodoHandler{
+		Service: service,
+	}
+}
+
+// Generic method to parse request body
+func parseRequestBody[T any](c *fiber.Ctx, req *T) error {
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid request body",
+		})
+	}
+	return nil
+}
+
+func (h *TodoHandler) GetTodos(c *fiber.Ctx) error {
+	todos := h.Service.GetAllTodos()
 	return c.JSON(todos)
 }
 
-func CreateTodo(c *fiber.Ctx) error {
+func (h *TodoHandler) CreateTodo(c *fiber.Ctx) error {
 	type request struct {
 		Title string `json:"title"`
 	}
 
 	body := new(request)
-	if err := c.BodyParser(body); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid request body",
-		})
+	if err := parseRequestBody(c, body); err != nil {
+		return err
 	}
 
-	todo := services.CreateTodo(body.Title)
+	todo := h.Service.CreateTodo(body.Title)
 	return c.Status(fiber.StatusCreated).JSON(todo)
 }
 
-func UpdateTodo(c *fiber.Ctx) error {
+func (h *TodoHandler) UpdateTodo(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(
@@ -43,13 +62,11 @@ func UpdateTodo(c *fiber.Ctx) error {
 	}
 
 	body := new(request)
-	if err := c.BodyParser(body); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid request body",
-		})
+	if err := parseRequestBody(c, body); err != nil {
+		return err
 	}
 
-	todo, updateErr := services.UpdateTodoByID(id, body.Title, body.Completed)
+	todo, updateErr := h.Service.UpdateTodoByID(id, body.Title, body.Completed)
 	if updateErr != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": updateErr.Error(),
@@ -59,7 +76,7 @@ func UpdateTodo(c *fiber.Ctx) error {
 	return c.JSON(todo)
 }
 
-func DeleteTodo(c *fiber.Ctx) error {
+func (h *TodoHandler) DeleteTodo(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(
@@ -69,7 +86,7 @@ func DeleteTodo(c *fiber.Ctx) error {
 		)
 	}
 
-	if err := services.DeleteTodoByID(id); err != nil {
+	if err := h.Service.DeleteTodoByID(id); err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": err.Error(),
 		})
