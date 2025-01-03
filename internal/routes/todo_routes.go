@@ -6,11 +6,22 @@ import (
 	"github.com/iczky/todo-fiber/internal/middlewares"
 )
 
-func SetupTodoRoutes(app *fiber.App, handler *handlers.TodoHandler) {
+type TodoRouter struct {
+	handler *handlers.TodoHandler
+}
+
+func NewTodoRouter(handler *handlers.TodoHandler) *TodoRouter {
+	return &TodoRouter{
+		handler: handler,
+	}
+}
+
+func (r *TodoRouter) RegisterRoutes(app *fiber.App) {
 	todo := app.Group("/api/todos")
 
-	todo.Get("/", handler.GetTodos)
-	todo.Post("/", middlewares.ValidateTitle, handler.CreateTodo)
-	todo.Put("/:id", middlewares.ValidateTitle, handler.UpdateTodo)
-	todo.Delete("/:id", handler.DeleteTodo)
+	todo.Get("/", r.handler.GetTodos)
+	todo.Get("/:id", r.handler.GetTodoById)
+	todo.Post("/", middlewares.ValidateTitle, r.handler.CreateTodo)
+	todo.Put("/:id", middlewares.ValidateTitle, r.handler.UpdateTodo)
+	todo.Delete("/:id", r.handler.DeleteTodo)
 }

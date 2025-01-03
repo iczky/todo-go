@@ -9,11 +9,17 @@ POST {{baseURL}}
 Content-Type: application/json
 
 {
-  "title": "Learn Go v2"
+  "title": "Learn GORM",
+  "description": "Understand how to integrate GORM with Go",
+  "priority": 1,
+  "completed": false,
+  "dueDate": "2023-12-31T00:00:00Z",
+  "createdAt": "...",
+  "updatedAt": "..."
 }
 
 ### Update a specific todo
-PUT {{baseURL}}/{id}
+PUT {{baseURL}}/1
 Content-Type: application/json
 
 {
